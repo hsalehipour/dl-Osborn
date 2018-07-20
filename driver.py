@@ -24,6 +24,25 @@ nfeatures = 2
 
 
 
+def train(estimator_obj, train_data, train_labels, tensors_to_log = {}):
+    # define the training function
+    train_input_fn = tf.estimator.inputs.numpy_input_fn(
+        x={"x": train_data},
+        y=train_labels,
+        batch_size=100,
+        num_epochs=None,
+        shuffle=True)
+
+    # Set up logging for predictions
+    # Log the values in a tensor with their labels using tensor_to_log dictionary
+    logging_hook = tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=50)
+
+    # Train the model
+    estimator_obj.train(
+        input_fn=train_input_fn,
+        steps=20000,
+        hooks=[logging_hook])
+    return
 
 
 def main(unused_argv):
@@ -39,22 +58,8 @@ def main(unused_argv):
     # Create the Estimator
     osborn_nn_model = tf.estimator.Estimator(model_fn = model.cnn_model_fn,model_dir= MODEL_DIR)
 
-    # Set up logging for predictions
-    # Log the values in a tensor with their labels using tensor_to_log dictionary
-    tensors_to_log = {}
-    logging_hook = tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=50)
-
-    # Train the model
-    train_input_fn = tf.estimator.inputs.numpy_input_fn(
-        x={"x": train_data},
-        y=train_labels,
-        batch_size=100,
-        num_epochs=None,
-        shuffle=True)
-    osborn_nn_model.train(
-        input_fn=train_input_fn,
-        steps=20000,
-        hooks=[logging_hook])
+    # train the model
+    train(osborn_nn_model, train_data, train_labels)
 
     # Evaluate the model and print results
     num_epochs = 20
