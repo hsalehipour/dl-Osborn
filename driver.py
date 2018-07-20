@@ -24,7 +24,15 @@ nfeatures = 2
 
 
 
-def train(estimator_obj, train_data, train_labels, tensors_to_log = {}):
+def train(estimator_obj, train_data, train_labels, nsteps = 1000, tensors_to_log = {}):
+    """
+    train the network as defined inside the estimator_obj with the given data
+    :param estimator_obj: an instance of tf.estimator.Estimator
+    :param train_data:   input values of the training dataset
+    :param train_labels: labels of training dataset
+    :param tensors_to_log: optional logging dictionary
+    :return: None. The trained model is stored inside estimator_obj.model_dir
+    """
     # define the training function
     train_input_fn = tf.estimator.inputs.numpy_input_fn(
         x={"x": train_data},
@@ -40,9 +48,28 @@ def train(estimator_obj, train_data, train_labels, tensors_to_log = {}):
     # Train the model
     estimator_obj.train(
         input_fn=train_input_fn,
-        steps=20000,
+        steps=nsteps,
         hooks=[logging_hook])
     return
+
+
+def evaluate(estimator_obj, data, labels, num_epochs = 20):
+    eval_input_fn = tf.estimator.inputs.numpy_input_fn(
+        x={"x": data},
+        y= labels,
+        num_epochs=num_epochs,
+        shuffle=False)
+    eval_results = estimator_obj.evaluate(input_fn=eval_input_fn)
+    return eval_results
+
+def predict(estimator_obj, data, labels, num_epochs = 20):
+    input_fn = tf.estimator.inputs.numpy_input_fn(
+        x={"x": data},
+        y= labels,
+        num_epochs=num_epochs,
+        shuffle=False)
+    results = estimator_obj.predict(input_fn=input_fn)
+    return np.array([rdic['efficiency'] for rdic in results]).reshape((num_epochs,labels.size)).mean(axis=0)
 
 
 def main(unused_argv):
@@ -56,38 +83,25 @@ def main(unused_argv):
 
 
     # Create the Estimator
-    osborn_nn_model = tf.estimator.Estimator(model_fn = model.cnn_model_fn,model_dir= MODEL_DIR)
+    osborn_nn_model = tf.estimator.Estimator(model_fn= model.cnn_model_fn, model_dir= MODEL_DIR)
 
     # train the model
     train(osborn_nn_model, train_data, train_labels)
 
     # Evaluate the model and print results
-    num_epochs = 20
-    eval_input_fn = tf.estimator.inputs.numpy_input_fn(
-        x={"x": eval_data},
-        y=eval_labels,
-        num_epochs=num_epochs,
-        shuffle=False)
-    eval_results = osborn_nn_model.evaluate(input_fn=eval_input_fn)
+    eval_results = evaluate(osborn_nn_model, eval_data, eval_labels)
     print(eval_results)
 
-    # Evaluate the model and print results
+    # Test the model and print results
     pred_data, pred_labels = dataset.load_data(TEST_DATA_DIR, split=False)
-    pred_input_fn = tf.estimator.inputs.numpy_input_fn(
-        x={"x": pred_data},
-        y=pred_labels,
-        num_epochs=num_epochs,
-        shuffle=False)
-    pred_results = osborn_nn_model.evaluate(input_fn=pred_input_fn)
+    pred_results = evaluate(osborn_nn_model, pred_data, pred_labels)
     print(pred_results)
 
     # Evaluate KHI test results
-    predicted_KHI_results = osborn_nn_model.predict(input_fn=eval_input_fn)
-    eff_KHI_predicted = np.array([prediction['efficiency'] for prediction in predicted_KHI_results]).reshape((num_epochs,eval_labels.size)).mean(axis=0)
+    eff_KHI_predicted = predict(osborn_nn_model, eval_data, eval_labels)
 
     # Predict HWI results and compare with the true values
-    predicted_HWI_results = osborn_nn_model.predict(input_fn=pred_input_fn)
-    eff_HWI_predicted = np.array([prediction['efficiency'] for prediction in predicted_HWI_results]).reshape((num_epochs,pred_labels.size)).mean(axis=0)
+    eff_HWI_predicted = predict(osborn_nn_model, pred_data, pred_labels)
 
     print({"Eval R2-Score" : r2_score(eval_labels, eff_KHI_predicted)})
     print({"Pred R2-Score" : r2_score(pred_labels, eff_HWI_predicted)})

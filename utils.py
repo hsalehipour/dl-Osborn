@@ -1,3 +1,5 @@
+import numpy as np
+
 
 def lrelu(x, alpha=0.001):
     """Leaky Relu activation function"""
