@@ -73,13 +73,13 @@ def main(argv):
     # train the model
     if FLAGS.mode == 'train':
         # Load training and eval data in np.array
-        data_dir = FLAGS.train_data
-        (train_data, train_labels), (eval_data, eval_labels) = dataset.load_data(data_dir, split=True, ratio=0.85)
-        # (train_data2, train_labels2), (eval_data2, eval_labels2) = load_data(TEST_DATA_DIR, split=True, ratio=0.0)
-        # train_data   = np.append(train_data  , train_data2  , axis=0)
-        # train_labels = np.append(train_labels, train_labels2, axis=0)
-        # eval_data    = np.append(eval_data  , eval_data2    , axis=0)
-        # eval_labels  = np.append(eval_labels, eval_labels2  , axis=0)
+        # data_dir = FLAGS.train_data
+        (train_data, train_labels), (eval_data, eval_labels) = dataset.load_data(FLAGS.train_data, split=True, ratio=0.85)
+        (train_data2, train_labels2), (eval_data2, eval_labels2) = dataset.load_data(FLAGS.test_data, split=True, ratio=0.05)
+        train_data   = np.append(train_data  , train_data2  , axis=0)
+        train_labels = np.append(train_labels, train_labels2, axis=0)
+        eval_data    = np.append(eval_data  , eval_data2    , axis=0)
+        eval_labels  = np.append(eval_labels, eval_labels2  , axis=0)
         train(osborn_nn_model, train_data, train_labels)
 
     # Evaluate the model and print results
