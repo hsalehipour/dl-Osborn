@@ -6,3 +6,5 @@
 *.dat
 
 experiments/test/
+
+trained_model/eval/
