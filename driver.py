@@ -6,6 +6,7 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 import matplotlib.pylab as plt
+import sys
 import model
 import dataset
 from utils import r2_score
@@ -22,6 +23,18 @@ headers_feature = ['chi', 'eps', 'N2', 'eff']
 nz_profile = 512
 nfeatures = 2
 
+# if len(sys.argv) <= 1:
+#     print("\nUsage:\npython driver.py <MODE> <DATA_DIR>\n")
+#     sys.exit()
+#
+# net_mode = sys.argv[1]
+# data_dir = sys.argv[-1]
+# if net_mode is None:
+#     net_mode = 'train'
+#     data_dir = TRAIN_DATA_DIR
+
+net_mode = 'train'
+data_dir = TRAIN_DATA_DIR
 
 
 def train(estimator_obj, train_data, train_labels, nsteps = 1000, tensors_to_log = {}):
@@ -72,45 +85,38 @@ def predict(estimator_obj, data, labels, num_epochs = 20):
     return np.array([rdic['efficiency'] for rdic in results]).reshape((num_epochs,labels.size)).mean(axis=0)
 
 
-def main(unused_argv):
-    # Load training and eval data in np.array
-    (train_data, train_labels), (eval_data, eval_labels) = dataset.load_data(TRAIN_DATA_DIR, split=True, ratio=0.85)
-    # (train_data2, train_labels2), (eval_data2, eval_labels2) = load_data(TEST_DATA_DIR, split=True, ratio=0.0)
-    # train_data   = np.append(train_data  , train_data2  , axis=0)
-    # train_labels = np.append(train_labels, train_labels2, axis=0)
-    # eval_data    = np.append(eval_data  , eval_data2    , axis=0)
-    # eval_labels  = np.append(eval_labels, eval_labels2  , axis=0)
-
+def main(net_mode):
 
     # Create the Estimator
     osborn_nn_model = tf.estimator.Estimator(model_fn= model.cnn_model_fn, model_dir= MODEL_DIR)
 
     # train the model
-    train(osborn_nn_model, train_data, train_labels)
+    if net_mode == 'train':
+        # Load training and eval data in np.array
+        (train_data, train_labels), (eval_data, eval_labels) = dataset.load_data(data_dir, split=True, ratio=0.85)
+        # (train_data2, train_labels2), (eval_data2, eval_labels2) = load_data(TEST_DATA_DIR, split=True, ratio=0.0)
+        # train_data   = np.append(train_data  , train_data2  , axis=0)
+        # train_labels = np.append(train_labels, train_labels2, axis=0)
+        # eval_data    = np.append(eval_data  , eval_data2    , axis=0)
+        # eval_labels  = np.append(eval_labels, eval_labels2  , axis=0)
+        train(osborn_nn_model, train_data, train_labels)
 
     # Evaluate the model and print results
-    eval_results = evaluate(osborn_nn_model, eval_data, eval_labels)
-    print(eval_results)
+    if net_mode == 'eval':
+        (train_data, train_labels), (eval_data, eval_labels) = dataset.load_data(data_dir, split=True, ratio=0.85)
+        eval_results = evaluate(osborn_nn_model, eval_data, eval_labels)
+        print(eval_results)
 
     # Test the model and print results
-    pred_data, pred_labels = dataset.load_data(TEST_DATA_DIR, split=False)
-    pred_results = evaluate(osborn_nn_model, pred_data, pred_labels)
-    print(pred_results)
+    if net_mode == 'infer':
+        pred_data, pred_labels = dataset.load_data(data_dir, split=False)
+        # pred_results = evaluate(osborn_nn_model, pred_data, pred_labels)
+        # print(pred_results)
 
-    # Evaluate KHI test results
-    eff_KHI_predicted = predict(osborn_nn_model, eval_data, eval_labels)
+        # Predict HWI results and compare with the true values
+        pred_results = predict(osborn_nn_model, pred_data, pred_labels)
+        dataset.save_data({'nn_eff':pred_results}, 'nnoutput.dat')
 
-    # Predict HWI results and compare with the true values
-    eff_HWI_predicted = predict(osborn_nn_model, pred_data, pred_labels)
-
-    print({"Eval R2-Score" : r2_score(eval_labels, eff_KHI_predicted)})
-    print({"Pred R2-Score" : r2_score(pred_labels, eff_HWI_predicted)})
-
-    plt.figure(figsize=(10, 8))
-    plt.plot(eff_KHI_predicted, 'r.-', eval_labels, 'b.-')
-    plt.figure(figsize=(10, 8))
-    plt.plot(eff_HWI_predicted, 'r.-', pred_labels, 'b.-')
-    plt.show()
 
 
 if __name__ == "__main__":

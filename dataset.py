@@ -51,3 +51,15 @@ def split_data_train_test(data, ratio):
     test_set = data[nexample_train:]
 
     return train_set, test_set
+
+
+def save_data(data_dic,fname):
+    """
+    "saves the the pands DataFrame into CSV file
+    :param fname: file_name
+    :param df: DataFrame
+    :return:
+    """
+    df = pd.DataFrame(data=data_dic)
+    df.to_csv(fname, sep='\t')
+    return
