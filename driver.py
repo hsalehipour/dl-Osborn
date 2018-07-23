@@ -7,6 +7,8 @@ import numpy as np
 import tensorflow as tf
 import model
 import dataset
+from utils import r2_score
+import matplotlib.pylab as plt
 
 # The set all the flags for running the network in various modes.
 FLAGS = model.set_flags()
@@ -98,7 +100,11 @@ def main(argv):
 
         # Predict HWI results and compare with the true values
         pred_results = predict(osborn_nn_model, pred_data)
-        dataset.save_data({'nn_eff': pred_results}, 'nnoutput.dat')
+        dataset.save_data({'eff_nn': pred_results}, 'dl_output.dat')
+        print({"Pred R2-Score": r2_score(pred_labels, pred_results)})
+        plt.figure(figsize=(10, 8))
+        plt.plot(pred_results, 'r.-', pred_labels, 'b.-')
+        plt.show()
 
 
 
