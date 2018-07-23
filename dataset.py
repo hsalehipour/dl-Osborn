@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-headers_feature = ['chi', 'eps', 'N2', 'eff']
+headers_feature = ['eps', 'N2', 'eff']
 nz_profile = 512
 nfeatures = 2
 
@@ -13,7 +13,6 @@ def load_data(fdir, split=True, ratio=0.85):
     """
     data = pd.read_csv(fdir, names=headers_feature)
     eff = data.pop('eff')[0:data.shape[0]:nz_profile]
-    chi = data.pop('chi')
 
     # # normalize the input features
     # data = normalize_data(data, axis=0)
