@@ -11,7 +11,7 @@ def load_data(fdir, split=True, ratio=0.85):
     Returns the mixing data-set as (train_x, train_y), (test_x, test_y). where _x and _y denote "features" and "labels"
     respectively.
     """
-    data = pd.read_csv(fdir, names=headers_feature)
+    data = pd.read_csv(fdir, names=headers_feature, skiprows=1)
     eff = data.pop('eff')[0:data.shape[0]:nz_profile]
 
     # # normalize the input features
