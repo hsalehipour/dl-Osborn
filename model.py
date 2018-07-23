@@ -18,9 +18,9 @@ hparams = {
 def set_flags():
     # DEFAULT SETTINGS
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_dir', type=str, default='./experiments/test/', help='Directory that stores all training logs and trained models')
-    parser.add_argument('--train_data', type=str, default='./data/training_data_normalized_features_chi_eps_N2.dat', help='Dataset for training')
-    parser.add_argument('--test_data', type=str, default='./data/prediction_data_normalized_features_chi_eps_N2.dat', help='Dataset for training')
+    parser.add_argument('--model_dir' , type=str, default='./experiments/test/r1/', help='Directory that stores all training logs and trained models')
+    parser.add_argument('--train_data', type=str, default='./data/KHI_full_depth_data.dat', help='Dataset for training')
+    parser.add_argument('--test_data' , type=str, default='./data/HWI_full_depth_data.dat', help='Dataset for testing')
     parser.add_argument('--mode', type=str, default='train', help='Network MODE: "train", "eval", "infer" (predict or serving).  [default: "train"]')
     parser.add_argument('--training_steps', type=int, default=2e4, help='Number of training steps [default: 20,000]')
     parser.add_argument('--batch', type=int, default=100, help='Batch Size per GPU during training [default: 100]')
