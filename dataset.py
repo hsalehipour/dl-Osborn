@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 
 
-headers_feature = ['eps', 'N2', 'eff']
+headers_feature = ['z', 'eps', 'N2', 'eff']
 nz_profile = 512
-nfeatures = 2
+nfeatures = 3
 
 def load_data(fdir, split=True, ratio=0.85):
     """
