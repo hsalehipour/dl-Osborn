@@ -30,20 +30,18 @@ def set_flags():
 
 
 
-def cnn_model_fn(features, labels, mode):
-    """Model function for CNN."""
+def ConvNet(input, mode):
+    """
+    the graph of a convolutional neural network
+    """
 
-    if mode == tf.estimator.ModeKeys.PREDICT:
-        tf.logging.info("model_fn: PREDICT, {}".format(mode))
-    elif mode == tf.estimator.ModeKeys.EVAL:
-        tf.logging.info("model_fn: EVAL, {}".format(mode))
-    elif mode == tf.estimator.ModeKeys.TRAIN:
-        tf.logging.info("model_fn: TRAIN, {}".format(mode))
+    # Determine whether mode is training
+    istraining = mode == tf.estimator.ModeKeys.TRAIN
 
     # Input Layer
     # Reshape X to 4-D tensor: [batch_size, width, height, channels]
     # 3 vertical profiles are measured at 512 points and have one channel
-    input_layer = tf.reshape(features["x"], [-1, 2, 512, 1])
+    input_layer = tf.reshape(input["x"], [-1, 2, 512, 1])
     input_layer_batch_normalized = tf.layers.batch_normalization(input_layer, axis=2)
 
     # Convolutional Layer #1
@@ -54,7 +52,7 @@ def cnn_model_fn(features, labels, mode):
         strides=(1, 1),
         padding="same",
         activation=hparams["activation"])
-    conv1_dropout = tf.layers.dropout(inputs=conv1, rate=hparams["dropout_rate"], training=mode == tf.estimator.ModeKeys.TRAIN)
+    conv1_dropout = tf.layers.dropout(inputs=conv1, rate=hparams["dropout_rate"], training=istraining)
 
     # Pooling Layer #1
     pool1 = tf.layers.average_pooling2d(inputs=conv1_dropout, pool_size=[1, 2], strides=[1, 2])
@@ -67,7 +65,7 @@ def cnn_model_fn(features, labels, mode):
         strides=(1, 1),
         padding="same",
         activation=hparams["activation"])
-    conv2_dropout = tf.layers.dropout(inputs=conv2, rate=hparams["dropout_rate"], training=mode == tf.estimator.ModeKeys.TRAIN)
+    conv2_dropout = tf.layers.dropout(inputs=conv2, rate=hparams["dropout_rate"], training=istraining)
 
     # Pooling Layer #2
     pool2 = tf.layers.average_pooling2d(inputs=conv2_dropout, pool_size=[1, 2], strides=[1, 2])
@@ -80,7 +78,7 @@ def cnn_model_fn(features, labels, mode):
         strides=(1, 1),
         padding="same",
         activation=hparams["activation"])
-    conv3_dropout = tf.layers.dropout(inputs=conv3, rate=hparams["dropout_rate"], training=mode == tf.estimator.ModeKeys.TRAIN)
+    conv3_dropout = tf.layers.dropout(inputs=conv3, rate=hparams["dropout_rate"], training=istraining)
 
     # Pooling Layer #3
     pool3 = tf.layers.average_pooling2d(inputs=conv3_dropout, pool_size=[1, 2], strides=[1, 2])
@@ -93,7 +91,7 @@ def cnn_model_fn(features, labels, mode):
         strides=(1, 1),
         padding="same",
         activation=hparams["activation"])
-    conv4_dropout = tf.layers.dropout(inputs=conv4, rate=hparams["dropout_rate"], training=mode == tf.estimator.ModeKeys.TRAIN)
+    conv4_dropout = tf.layers.dropout(inputs=conv4, rate=hparams["dropout_rate"], training=istraining)
 
     # Pooling Layer #4
     pool4 = tf.layers.average_pooling2d(inputs=conv4_dropout, pool_size=[1, 2], strides=[1, 2])
@@ -106,7 +104,7 @@ def cnn_model_fn(features, labels, mode):
         strides=(1, 1),
         padding="same",
         activation=hparams["activation"])
-    conv5_dropout = tf.layers.dropout(inputs=conv5, rate=hparams["dropout_rate"], training=mode == tf.estimator.ModeKeys.TRAIN)
+    conv5_dropout = tf.layers.dropout(inputs=conv5, rate=hparams["dropout_rate"], training=istraining)
 
     # Pooling Layer #5
     pool5 = tf.layers.average_pooling2d(inputs=conv5_dropout, pool_size=[1, 2], strides=[1, 2])
@@ -119,7 +117,7 @@ def cnn_model_fn(features, labels, mode):
         strides=(1, 1),
         padding="same",
         activation=hparams["activation"])
-    conv6_dropout = tf.layers.dropout(inputs=conv6, rate=hparams["dropout_rate"], training=mode == tf.estimator.ModeKeys.TRAIN)
+    conv6_dropout = tf.layers.dropout(inputs=conv6, rate=hparams["dropout_rate"], training=istraining)
 
     # Pooling Layer #6
     pool6 = tf.layers.average_pooling2d(inputs=conv6_dropout, pool_size=[1, 2], strides=[1, 2])
@@ -132,48 +130,19 @@ def cnn_model_fn(features, labels, mode):
 
     # Add dropout operation
     dropout = tf.layers.dropout(
-        inputs=dense, rate=hparams["dropout_rate"], training=mode == tf.estimator.ModeKeys.TRAIN)
-
+        inputs=dense, rate=hparams["dropout_rate"], training=istraining)
 
     # Output layer
     regressed_output = tf.squeeze(tf.layers.dense(inputs=dropout, units=1, activation=tf.nn.sigmoid))
 
-    # Generate predictions (for PREDICT and EVAL mode)
-    predictions = {"efficiency": regressed_output}
-
-    if mode == tf.estimator.ModeKeys.PREDICT:
-        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
-
-    # Calculate Loss (for both TRAIN and EVAL modes)
-    loss = tf.losses.mean_squared_error(labels=labels, predictions=predictions["efficiency"])
-    tf.summary.scalar('Loss', loss)
-
-    # Configure the Training Op (for TRAIN mode)
-    if mode == tf.estimator.ModeKeys.TRAIN:
-        optimizer = tf.train.AdamOptimizer(learning_rate=hparams["learning_rate"])
-        train_op = optimizer.minimize(
-            loss=loss,
-            global_step=tf.train.get_global_step())
-        return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
-
-    # Add evaluation metrics (for EVAL mode)
-    eval_metric_ops = {
-        "error_rmse": tf.metrics.root_mean_squared_error(
-            labels=labels, predictions=predictions["efficiency"]),
-    }
-    return tf.estimator.EstimatorSpec(
-        mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+    return regressed_output
 
 
-def dnn_model_fn(features, labels, mode):
-    """Model function for CNN."""
 
-    if mode == tf.estimator.ModeKeys.PREDICT:
-        tf.logging.info("model_fn: PREDICT, {}".format(mode))
-    elif mode == tf.estimator.ModeKeys.EVAL:
-        tf.logging.info("model_fn: EVAL, {}".format(mode))
-    elif mode == tf.estimator.ModeKeys.TRAIN:
-        tf.logging.info("model_fn: TRAIN, {}".format(mode))
+def FCNet(features, mode):
+    """
+    Graph of a fully connected network.
+    """
 
     # batch normalize input layer
     # input_layer_reshaped = tf.reshape(features["x"], [-1, 3, 512])
@@ -200,29 +169,64 @@ def dnn_model_fn(features, labels, mode):
     # Output layer
     regressed_output = tf.squeeze(tf.layers.dense(inputs=dropout, units=1, activation=tf.nn.sigmoid))
 
-    # Generate predictions (for PREDICT and EVAL mode)
-    predictions = {"efficiency": regressed_output}
+    return regressed_output
+
+
+
+
+def model_fn(features, labels, mode, graph_net = None):
+    """
+    Model function
+    """
 
     if mode == tf.estimator.ModeKeys.PREDICT:
-        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
+        tf.logging.info("model_fn: PREDICT, {}".format(mode))
+    elif mode == tf.estimator.ModeKeys.EVAL:
+        tf.logging.info("model_fn: EVAL, {}".format(mode))
+    elif mode == tf.estimator.ModeKeys.TRAIN:
+        tf.logging.info("model_fn: TRAIN, {}".format(mode))
+
+    # Find network output
+    regressed_output = graph_net(features, mode)
 
     # Calculate Loss (for both TRAIN and EVAL modes)
-    loss = tf.losses.mean_squared_error(labels=labels, predictions=predictions["efficiency"])
+    loss = tf.losses.mean_squared_error(labels=labels, predictions=regressed_output)
     tf.summary.scalar('Loss', loss)
+
+    # Generate predictions (for PREDICT and EVAL mode)
+    predictions_dic = {"efficiency": regressed_output}
 
     # Configure the Training Op (for TRAIN mode)
     if mode == tf.estimator.ModeKeys.TRAIN:
         optimizer = tf.train.AdamOptimizer(learning_rate=hparams["learning_rate"])
-        train_op = optimizer.minimize(
-            loss=loss,
-            global_step=tf.train.get_global_step())
+        train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
         return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
 
-    # Add evaluation metrics (for EVAL mode)
-    eval_metric_ops = {
-        "error_rmse": tf.metrics.root_mean_squared_error(
-            labels=labels, predictions=predictions["efficiency"]),
-    }
-    return tf.estimator.EstimatorSpec(
-        mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+    elif mode == tf.estimator.ModeKeys.PREDICT:
+        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions_dic)
+
+    else:
+        # mode == tf.estimator.ModeKeys.EVAL:
+        # Add evaluation metrics (for EVAL mode)
+        eval_metric_ops = {
+            "error_rmse": tf.metrics.root_mean_squared_error(
+                labels=labels, predictions=regressed_output),
+        }
+        return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+
+
+
+
+def cnn_model_fn(features, labels, mode):
+    return model_fn(features, labels, mode, graph_net=ConvNet)
+
+
+def dnn_model_fn(features, labels, mode):
+    return model_fn(features, labels, mode, graph_net=FCNet)
+
+
+
+
+
+
 
