@@ -189,30 +189,33 @@ def model_fn(features, labels, mode, graph_net = None):
     # Find network output
     regressed_output = graph_net(features, mode)
 
-    # Calculate Loss (for both TRAIN and EVAL modes)
-    loss = tf.losses.mean_squared_error(labels=labels, predictions=regressed_output)
-    tf.summary.scalar('Loss', loss)
+
 
     # Generate predictions (for PREDICT and EVAL mode)
     predictions_dic = {"efficiency": regressed_output}
 
     # Configure the Training Op (for TRAIN mode)
     if mode == tf.estimator.ModeKeys.TRAIN:
+        # Calculate Loss (for both TRAIN and EVAL modes)
+        loss = tf.losses.mean_squared_error(labels=labels, predictions=regressed_output)
+        tf.summary.scalar('Loss', loss)
+
         optimizer = tf.train.AdamOptimizer(learning_rate=hparams["learning_rate"])
         train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
         return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
 
-    elif mode == tf.estimator.ModeKeys.PREDICT:
-        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions_dic)
-
-    else:
-        # mode == tf.estimator.ModeKeys.EVAL:
+    elif mode == tf.estimator.ModeKeys.EVAL:
         # Add evaluation metrics (for EVAL mode)
+        loss = tf.losses.mean_squared_error(labels=labels, predictions=regressed_output)
+        tf.summary.scalar('Loss', loss)
         eval_metric_ops = {
             "error_rmse": tf.metrics.root_mean_squared_error(
                 labels=labels, predictions=regressed_output),
         }
         return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+    else:
+        # mode == tf.estimator.ModeKeys.PREDICT:
+        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions_dic)
 
 
 
