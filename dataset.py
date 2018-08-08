@@ -4,7 +4,7 @@ import pandas as pd
 
 headers_feature = ['z', 'eps', 'N2', 'eff']
 nz_profile = 512
-nfeatures = 3
+nfeatures = 2
 
 def load_data(fdir, split=True, ratio=0.85):
     """
@@ -13,7 +13,7 @@ def load_data(fdir, split=True, ratio=0.85):
     """
     data = pd.read_csv(fdir, names=headers_feature, skiprows=1)
     eff = data.pop('eff')[0:data.shape[0]:nz_profile]
-
+    zz = data.pop('z')
     # # normalize the input features
     # data = normalize_data(data, axis=0)
     # xmin = data['eps'].min()
