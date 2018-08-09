@@ -14,12 +14,6 @@ def load_data(fdir, split=True, ratio=0.85):
     data = pd.read_csv(fdir, names=headers_feature, skiprows=1)
     eff = data.pop('eff')[0:data.shape[0]:nz_profile]
     zz = data.pop('z')
-    # # normalize the input features
-    # data = normalize_data(data, axis=0)
-    # xmin = data['eps'].min()
-    # xmax = data['eps'].max()
-    # data['eps']= (data['eps'] - xmin) / (xmax-xmin)
-    # data['N2'] = (data['N2']  - xmin) / (xmax-xmin)
 
     # data must be reshaped
     features = np.array(data, dtype=np.float32).reshape((-1, nz_profile, nfeatures)).transpose((0,2,1))

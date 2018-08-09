@@ -57,11 +57,11 @@ def rmse(label, prediction):
 
 def normalize_data(x, axis=0):
     """"
-    Normalizes the data to range between 0-1
+    Standard normalization of the data: xn = (x-mean(x))/std(x)
     """
     x = np.array(x, dtype=np.float32)
-    xmin = np.expand_dims(x.min(axis=axis), axis=axis)
-    xmax = np.expand_dims(x.max(axis=axis), axis=axis)
+    xmean = np.expand_dims(x.mean(axis=axis), axis=axis)
+    xstd  = np.expand_dims(x.std(axis=axis), axis=axis)
 
-    return (x-xmin)/(xmax-xmin)
+    return (x-xmean)/(xstd + 1e-6)
 
