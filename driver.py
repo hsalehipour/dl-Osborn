@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 import model
 import dataset
-from utils import r2_score
+from utils import r2_score, rmse
 import matplotlib.pylab as plt
 
 # The set all the flags for running the network in various modes.
@@ -102,6 +102,7 @@ def main(argv):
         pred_results = predict(osborn_nn_model, pred_data)
         dataset.save_data({'eff_nn': pred_results}, 'dl_output.dat')
         print({"Pred R2-Score": r2_score(pred_labels, pred_results)})
+        print({"Pred error_rmse": rmse(pred_labels, pred_results)})
         plt.figure(figsize=(10, 8))
         plt.plot(pred_results, 'r.-', pred_labels, 'b.-')
         plt.show()

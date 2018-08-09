@@ -48,6 +48,12 @@ def r2_score(label, prediction):
 
     return r2
 
+def rmse(label, prediction):
+    """
+    calculate the RMSE error of predictions
+    """
+    return np.sqrt(np.mean((label-prediction)**2))
+
 
 def normalize_data(x, axis=0):
     """"
