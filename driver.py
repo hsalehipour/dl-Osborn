@@ -70,7 +70,7 @@ def predict(estimator_obj, input_data, num_epochs = FLAGS.epoch):
 def main(argv):
 
     # Create the Estimator
-    osborn_nn_model = tf.estimator.Estimator(model_fn= model.cnn_model_fn, model_dir= FLAGS.model_dir)
+    osborn_nn_model = tf.estimator.Estimator(model_fn=model.cnn_model_fn, model_dir=FLAGS.model_dir)
 
     # train the model
     if FLAGS.mode == 'train':
@@ -95,8 +95,6 @@ def main(argv):
     if FLAGS.mode == 'infer':
         data_dir = FLAGS.test_data
         pred_data, pred_labels = dataset.load_data(data_dir, split=False)
-        # pred_results = evaluate(osborn_nn_model, pred_data, pred_labels)
-        # print(pred_results)
 
         # Predict HWI results and compare with the true values
         pred_results = predict(osborn_nn_model, pred_data)
