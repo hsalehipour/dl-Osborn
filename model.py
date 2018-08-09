@@ -144,23 +144,24 @@ def FCNet(features, mode):
     Graph of a fully connected network.
     """
 
+    # Input Layer
     # batch normalize input layer
-    # input_layer_reshaped = tf.reshape(features["x"], [-1, 3, 512])
-    # input_layer_batch_normalized = tf.layers.batch_normalization(input_layer_reshaped, axis=-1)
-    # input_layer = tf.reshape(input_layer_batch_normalized, [-1, 3 * 512])
-    input_layer = features["x"]
+    input_layer_reshaped = tf.reshape(features["x"], [-1, 2, 512])
+    input_layer_batch_normalized = tf.layers.batch_normalization(input_layer_reshaped, axis=-1)
+    input_layer = tf.reshape(input_layer_batch_normalized, [-1, 2 * 512])
+    # input_layer = features["x"]
 
     # Dense Layer #1
-    dense1 = tf.layers.dense(inputs=input_layer, units=4096, activation=tf.nn.elu)
+    dense1 = tf.layers.dense(inputs=input_layer, units=4096, activation=hparams["activation"])
 
     # Dense Layer #2
-    dense2 = tf.layers.dense(inputs=dense1, units=1024, activation=tf.nn.elu)
+    dense2 = tf.layers.dense(inputs=dense1, units=1024, activation=hparams["activation"])
 
     # Dense Layer #3
-    dense3 = tf.layers.dense(inputs=dense2, units=128, activation=tf.nn.elu)
+    dense3 = tf.layers.dense(inputs=dense2, units=128, activation=hparams["activation"])
 
     # Dense Layer #4
-    dense4 = tf.layers.dense(inputs=dense3, units=32, activation=tf.nn.elu)
+    dense4 = tf.layers.dense(inputs=dense3, units=32, activation=hparams["activation"])
 
     # Add dropout operation
     dropout = tf.layers.dropout(
@@ -188,8 +189,6 @@ def model_fn(features, labels, mode, graph_net = None):
 
     # Find network output
     regressed_output = graph_net(features, mode)
-
-
 
     # Generate predictions (for PREDICT and EVAL mode)
     predictions_dic = {"efficiency": regressed_output}
