@@ -29,6 +29,10 @@ def set_flags():
     return FLAGS
 
 
+def loss_fn(labels, nn_output):
+    loss = tf.losses.mean_squared_error(labels=labels, predictions=nn_output)
+    return loss
+
 
 def ConvNet(input, mode):
     """
@@ -133,9 +137,9 @@ def ConvNet(input, mode):
         inputs=dense, rate=hparams["dropout_rate"], training=istraining)
 
     # Output layer
-    regressed_output = tf.squeeze(tf.layers.dense(inputs=dropout, units=1, activation=tf.nn.sigmoid))
+    output = tf.squeeze(tf.layers.dense(inputs=dropout, units=1, activation=tf.nn.sigmoid))
 
-    return regressed_output
+    return output
 
 
 
@@ -168,14 +172,14 @@ def FCNet(features, mode):
         inputs=dense4, rate=hparams["dropout_rate"], training=mode == tf.estimator.ModeKeys.TRAIN)
 
     # Output layer
-    regressed_output = tf.squeeze(tf.layers.dense(inputs=dropout, units=1, activation=tf.nn.sigmoid))
+    output = tf.squeeze(tf.layers.dense(inputs=dropout, units=1, activation=tf.nn.sigmoid))
 
-    return regressed_output
-
-
+    return output
 
 
-def model_fn(features, labels, mode, graph_net = None):
+
+
+def model_fn(features, labels, mode, nn_graph = None):
     """
     Model function
     """
@@ -188,15 +192,15 @@ def model_fn(features, labels, mode, graph_net = None):
         tf.logging.info("model_fn: TRAIN, {}".format(mode))
 
     # Find network output
-    regressed_output = graph_net(features, mode)
+    nn_output = nn_graph(features, mode)
 
     # Generate predictions (for PREDICT and EVAL mode)
-    predictions_dic = {"efficiency": regressed_output}
+    predictions_dic = {"efficiency": nn_output}
 
     # Configure the Training Op (for TRAIN mode)
     if mode == tf.estimator.ModeKeys.TRAIN:
         # Calculate Loss (for both TRAIN and EVAL modes)
-        loss = tf.losses.mean_squared_error(labels=labels, predictions=regressed_output)
+        loss = loss_fn(labels, nn_output)
         tf.summary.scalar('Loss', loss)
 
         optimizer = tf.train.AdamOptimizer(learning_rate=hparams["learning_rate"])
@@ -205,11 +209,11 @@ def model_fn(features, labels, mode, graph_net = None):
 
     elif mode == tf.estimator.ModeKeys.EVAL:
         # Add evaluation metrics (for EVAL mode)
-        loss = tf.losses.mean_squared_error(labels=labels, predictions=regressed_output)
+        loss = loss_fn(labels, nn_output)
         tf.summary.scalar('Loss', loss)
         eval_metric_ops = {
             "error_rmse": tf.metrics.root_mean_squared_error(
-                labels=labels, predictions=regressed_output),
+                labels=labels, predictions=nn_output),
         }
         return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
     else:
@@ -220,11 +224,11 @@ def model_fn(features, labels, mode, graph_net = None):
 
 
 def cnn_model_fn(features, labels, mode):
-    return model_fn(features, labels, mode, graph_net=ConvNet)
+    return model_fn(features, labels, mode, nn_graph=ConvNet)
 
 
 def dnn_model_fn(features, labels, mode):
-    return model_fn(features, labels, mode, graph_net=FCNet)
+    return model_fn(features, labels, mode, nn_graph=FCNet)
 
 
 
