@@ -29,8 +29,19 @@ def set_flags():
     return FLAGS
 
 
-def loss_fn(labels, nn_output):
-    loss = tf.losses.mean_squared_error(labels=labels, predictions=nn_output)
+def loss_fn(features, labels, nn_output, mode):
+    if mode == tf.estimator.ModeKeys.EVAL:
+        loss = tf.losses.mean_squared_error(labels=labels, predictions=nn_output)
+    else:
+        eff_dns    = labels[:, 0]
+        mixing_dns = labels[:, 1]
+        eps_dns    = features['x'][:, 0, :]
+        eff_nn     = nn_output
+        mixing_nn  = tf.multiply(tf.divide(eff_nn, tf.subtract(1.0, eff_nn)), tf.reduce_mean(eps_dns, axis=-1))
+
+        loss1 = tf.losses.mean_squared_error(labels=eff_dns, predictions=eff_nn)
+        loss2 = tf.losses.mean_squared_error(labels=mixing_dns, predictions=mixing_nn)
+        loss  = tf.reduce_mean(loss1+loss2)
     return loss
 
 
@@ -200,7 +211,7 @@ def model_fn(features, labels, mode, nn_graph = None):
     # Configure the Training Op (for TRAIN mode)
     if mode == tf.estimator.ModeKeys.TRAIN:
         # Calculate Loss (for both TRAIN and EVAL modes)
-        loss = loss_fn(labels, nn_output)
+        loss = loss_fn(features, labels, nn_output, mode)
         tf.summary.scalar('Loss', loss)
 
         optimizer = tf.train.AdamOptimizer(learning_rate=hparams["learning_rate"])
@@ -209,7 +220,7 @@ def model_fn(features, labels, mode, nn_graph = None):
 
     elif mode == tf.estimator.ModeKeys.EVAL:
         # Add evaluation metrics (for EVAL mode)
-        loss = loss_fn(labels, nn_output)
+        loss = loss_fn(features, labels, nn_output, mode)
         tf.summary.scalar('Loss', loss)
         eval_metric_ops = {
             "error_rmse": tf.metrics.root_mean_squared_error(
