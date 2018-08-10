@@ -6,7 +6,7 @@ headers_feature = ['z', 'eps', 'N2', 'eff']
 nz_profile = 512
 nfeatures = 2
 
-def load_data(fdir, split=True, ratio=0.85):
+def load_data(fdir, ratio=1.0):
     """
     Returns the mixing data-set as (train_x, train_y), (test_x, test_y). where _x and _y denote "features" and "labels"
     respectively.
@@ -22,7 +22,7 @@ def load_data(fdir, split=True, ratio=0.85):
     # normalize the input features
     # features = normalize_data(features, axis=2)
 
-    if split:
+    if ratio < 1.0:
         # divide dataset (85-15) for training-testing
         train_x, test_x = split_data_train_test(features, ratio)
         train_y, test_y = split_data_train_test(labels  , ratio)
