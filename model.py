@@ -137,10 +137,8 @@ def ConvNet(input, mode):
         inputs=dense, rate=hparams["dropout_rate"], training=istraining)
 
     # Output layer
-    mixing  = tf.squeeze(tf.layers.dense(inputs=dropout, units=1, activation=hparams["activation"]))
-    eps_dns = tf.reduce_mean(input["x"][:, 0, :], axis=-1)
-    eff     = tf.divide(mixing, tf.add(mixing, eps_dns))
-    return eff
+    output  = tf.squeeze(tf.layers.dense(inputs=dropout, units=1, activation=tf.nn.sigmoid))
+    return output
 
 
 
