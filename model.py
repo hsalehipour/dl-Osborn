@@ -42,7 +42,7 @@ def loss_fn(features, labels, nn_output, mode):
         eff_nn_indirect  = tf.divide(mixing_nn, tf.add(mixing_nn, eps_dns))
 
         loss1 = tf.losses.mean_squared_error(labels=eff_dns, predictions=eff_nn)
-        loss2 = tf.losses.mean_squared_error(labels=eff_nn , predictions=eff_nn_indirect)
+        loss2 = tf.losses.mean_squared_error(labels=eff_dns , predictions=eff_nn_indirect)
         loss  = loss1+loss2
     return loss
 
