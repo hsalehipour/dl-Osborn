@@ -6,7 +6,7 @@ headers_feature = ['z', 'eps', 'N2', 'eff', 'M']
 nz_profile = 512
 nfeatures = 2
 
-def load_data(fdir, mode, ratio=1.0):
+def load_data(fdir, ratio=1.0):
     """
     Returns the mixing data-set as (train_x, train_y), (test_x, test_y). where _x and _y denote "features" and "labels"
     respectively.
@@ -18,10 +18,7 @@ def load_data(fdir, mode, ratio=1.0):
 
     # data must be reshaped
     features = np.array(data, dtype=np.float32).reshape((-1, nz_profile, nfeatures)).transpose((0,2,1))
-    if mode == 'train':
-        labels = np.array([eff, MM], dtype=np.float32).T
-    else:
-        labels = np.array(eff, dtype=np.float32)
+    labels = np.array(eff, dtype=np.float32)
 
     # normalize the input features
     # features = normalize_data(features, axis=2)

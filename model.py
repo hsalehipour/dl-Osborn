@@ -29,19 +29,20 @@ def set_flags():
     return FLAGS
 
 
-def loss_fn(features, labels, nn_output, nn_mixing, mode):
+def loss_fn(features, labels, nn_output, mode):
     if mode == tf.estimator.ModeKeys.EVAL:
         loss = tf.losses.mean_squared_error(labels=labels, predictions=nn_output)
     else:
-        eff_dns    = labels[:, 0]
+        eff_dns    = labels
         eps_dns    = tf.reduce_mean(features['x'][:, 0, :], axis=-1)
 
-        # outputs of the neural network
-        eff_nn    = nn_output
-        eff_nn_indirect  = tf.divide(nn_mixing, tf.add(nn_mixing, eps_dns))
+        # Unpack outputs of the neural network
+        eff_nn    = nn_output[:, 0]
+        mixing_nn = nn_output[:, 1]
+        eff_nn_indirect  = tf.divide(mixing_nn, tf.add(mixing_nn, eps_dns))
 
         loss1 = tf.losses.mean_squared_error(labels=eff_dns, predictions=eff_nn)
-        loss2 = tf.losses.mean_squared_error(labels=eff_nn, predictions=eff_nn_indirect)
+        loss2 = tf.losses.mean_squared_error(labels=eff_nn , predictions=eff_nn_indirect)
         loss  = loss1+loss2
     return loss
 
@@ -149,10 +150,10 @@ def ConvNet(input, mode):
         inputs=dense, rate=hparams["dropout_rate"], training=istraining)
 
     # Output layer
-    output1 = tf.squeeze(tf.layers.dense(inputs=dropout, units=1, activation=tf.nn.sigmoid))
-    output2 = tf.squeeze(tf.layers.dense(inputs=dropout, units=1, activation=hparams["activation"]))
-
-    return output1, output2
+    output1 = tf.layers.dense(inputs=dropout, units=1, activation=tf.nn.sigmoid)
+    output2 = tf.layers.dense(inputs=dropout, units=1, activation=hparams["activation"])
+    output = tf.concat([output1, output2], -1)
+    return output
 
 
 
@@ -205,15 +206,17 @@ def model_fn(features, labels, mode, nn_graph = None):
         tf.logging.info("model_fn: TRAIN, {}".format(mode))
 
     # Find network output
-    nn_output, nn_mixing = nn_graph(features, mode)
+    nn_output = nn_graph(features, mode)
+    nn_eff    = nn_output[:, 0]
+    nn_mixing = nn_output[:, 1]
 
     # Generate predictions (for PREDICT and EVAL mode)
-    predictions_dic = {"efficiency": nn_output}
+    predictions_dic = {"efficiency": nn_eff}
 
     # Configure the Training Op (for TRAIN mode)
     if mode == tf.estimator.ModeKeys.TRAIN:
         # Calculate Loss (for both TRAIN and EVAL modes)
-        loss = loss_fn(features, labels, nn_output, nn_mixing, mode)
+        loss = loss_fn(features, labels, nn_output, mode)
         tf.summary.scalar('Loss', loss)
 
         optimizer = tf.train.AdamOptimizer(learning_rate=hparams["learning_rate"])
@@ -222,11 +225,11 @@ def model_fn(features, labels, mode, nn_graph = None):
 
     elif mode == tf.estimator.ModeKeys.EVAL:
         # Add evaluation metrics (for EVAL mode)
-        loss = loss_fn(features, labels, nn_output, mode)
+        loss = loss_fn(features, labels, nn_eff, mode)
         tf.summary.scalar('Loss', loss)
         eval_metric_ops = {
             "error_rmse": tf.metrics.root_mean_squared_error(
-                labels=labels, predictions=nn_output),
+                labels=labels, predictions=nn_eff),
         }
         return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
     else:
