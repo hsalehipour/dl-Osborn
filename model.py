@@ -42,7 +42,7 @@ def loss_fn(features, labels, nn_output, mode):
         eff_nn_indirect  = tf.divide(mixing_nn, tf.add(mixing_nn, eps_dns))
 
         loss1 = tf.losses.mean_squared_error(labels=eff_dns, predictions=eff_nn)
-        loss2 = tf.losses.mean_squared_error(labels=eff_dns , predictions=eff_nn_indirect)
+        loss2 = tf.losses.mean_squared_error(labels=eff_dns, predictions=eff_nn_indirect)
         loss  = loss1+loss2
     return loss
 
@@ -65,7 +65,7 @@ def ConvNet(input, mode):
     conv1 = tf.layers.conv2d(
         inputs=input_layer_batch_normalized,
         filters=8,
-        kernel_size=[2, 4],
+        kernel_size=[2, 32],
         strides=(1, 1),
         padding="same",
         activation=hparams["activation"])
@@ -78,7 +78,7 @@ def ConvNet(input, mode):
     conv2 = tf.layers.conv2d(
         inputs=pool1,
         filters=16,
-        kernel_size=[2, 4],
+        kernel_size=[2, 24],
         strides=(1, 1),
         padding="same",
         activation=hparams["activation"])
@@ -91,7 +91,7 @@ def ConvNet(input, mode):
     conv3 = tf.layers.conv2d(
         inputs=pool2,
         filters=32,
-        kernel_size=[2, 4],
+        kernel_size=[2, 16],
         strides=(1, 1),
         padding="same",
         activation=hparams["activation"])
@@ -104,7 +104,7 @@ def ConvNet(input, mode):
     conv4 = tf.layers.conv2d(
         inputs=pool3,
         filters=32,
-        kernel_size=[2, 4],
+        kernel_size=[2, 12],
         strides=(1, 1),
         padding="same",
         activation=hparams["activation"])
@@ -117,7 +117,7 @@ def ConvNet(input, mode):
     conv5 = tf.layers.conv2d(
         inputs=pool4,
         filters=64,
-        kernel_size=[2, 4],
+        kernel_size=[2, 8],
         strides=(1, 1),
         padding="same",
         activation=hparams["activation"])
