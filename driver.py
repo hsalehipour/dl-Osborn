@@ -70,7 +70,8 @@ def predict(estimator_obj, input_data, num_epochs = FLAGS.epoch):
 def main(argv):
 
     # Create the Estimator
-    osborn_nn_model = tf.estimator.Estimator(model_fn=model.cnn_model_fn, model_dir=FLAGS.model_dir)
+    config = tf.estimator.RunConfig().replace(model_dir=FLAGS.model_dir, tf_random_seed=1234)
+    osborn_nn_model = tf.estimator.Estimator(model_fn=model.cnn_model_fn, config=config)
 
     # train the model
     if FLAGS.mode == 'train':
@@ -108,6 +109,5 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    tf.set_random_seed(1234)
     tf.logging.set_verbosity(tf.logging.INFO)
     tf.app.run()
