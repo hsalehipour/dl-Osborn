@@ -55,8 +55,9 @@ def ConvNet(input, mode):
         kernel_size=[2, 4],
         strides=(1, 1),
         padding="same",
+        kernel_initializer=tf.contrib.layers.xavier_initializer(seed=1234),
         activation=hparams["activation"])
-    conv1_dropout = tf.layers.dropout(inputs=conv1, rate=hparams["dropout_rate"], training=istraining)
+    conv1_dropout = tf.layers.dropout(inputs=conv1, rate=hparams["dropout_rate"], training=istraining, seed=12)
 
     # Pooling Layer #1
     pool1 = tf.layers.average_pooling2d(inputs=conv1_dropout, pool_size=[1, 2], strides=[1, 2])
@@ -68,8 +69,9 @@ def ConvNet(input, mode):
         kernel_size=[2, 4],
         strides=(1, 1),
         padding="same",
+        kernel_initializer=tf.contrib.layers.xavier_initializer(seed=1234),
         activation=hparams["activation"])
-    conv2_dropout = tf.layers.dropout(inputs=conv2, rate=hparams["dropout_rate"], training=istraining)
+    conv2_dropout = tf.layers.dropout(inputs=conv2, rate=hparams["dropout_rate"], training=istraining, seed=12)
 
     # Pooling Layer #2
     pool2 = tf.layers.average_pooling2d(inputs=conv2_dropout, pool_size=[1, 2], strides=[1, 2])
@@ -81,8 +83,9 @@ def ConvNet(input, mode):
         kernel_size=[2, 4],
         strides=(1, 1),
         padding="same",
+        kernel_initializer=tf.contrib.layers.xavier_initializer(seed=1234),
         activation=hparams["activation"])
-    conv3_dropout = tf.layers.dropout(inputs=conv3, rate=hparams["dropout_rate"], training=istraining)
+    conv3_dropout = tf.layers.dropout(inputs=conv3, rate=hparams["dropout_rate"], training=istraining, seed=12)
 
     # Pooling Layer #3
     pool3 = tf.layers.average_pooling2d(inputs=conv3_dropout, pool_size=[1, 2], strides=[1, 2])
@@ -94,8 +97,9 @@ def ConvNet(input, mode):
         kernel_size=[2, 4],
         strides=(1, 1),
         padding="same",
+        kernel_initializer=tf.contrib.layers.xavier_initializer(seed=1234),
         activation=hparams["activation"])
-    conv4_dropout = tf.layers.dropout(inputs=conv4, rate=hparams["dropout_rate"], training=istraining)
+    conv4_dropout = tf.layers.dropout(inputs=conv4, rate=hparams["dropout_rate"], training=istraining, seed=12)
 
     # Pooling Layer #4
     pool4 = tf.layers.average_pooling2d(inputs=conv4_dropout, pool_size=[1, 2], strides=[1, 2])
@@ -107,8 +111,9 @@ def ConvNet(input, mode):
         kernel_size=[2, 4],
         strides=(1, 1),
         padding="same",
+        kernel_initializer=tf.contrib.layers.xavier_initializer(seed=1234),
         activation=hparams["activation"])
-    conv5_dropout = tf.layers.dropout(inputs=conv5, rate=hparams["dropout_rate"], training=istraining)
+    conv5_dropout = tf.layers.dropout(inputs=conv5, rate=hparams["dropout_rate"], training=istraining, seed=12)
 
     # Pooling Layer #5
     pool5 = tf.layers.average_pooling2d(inputs=conv5_dropout, pool_size=[1, 2], strides=[1, 2])
@@ -120,8 +125,9 @@ def ConvNet(input, mode):
         kernel_size=[2, 4],
         strides=(1, 1),
         padding="same",
+        kernel_initializer=tf.contrib.layers.xavier_initializer(seed=1234),
         activation=hparams["activation"])
-    conv6_dropout = tf.layers.dropout(inputs=conv6, rate=hparams["dropout_rate"], training=istraining)
+    conv6_dropout = tf.layers.dropout(inputs=conv6, rate=hparams["dropout_rate"], training=istraining, seed=12)
 
     # Pooling Layer #6
     pool6 = tf.layers.average_pooling2d(inputs=conv6_dropout, pool_size=[1, 2], strides=[1, 2])
@@ -134,7 +140,7 @@ def ConvNet(input, mode):
 
     # Add dropout operation
     dropout = tf.layers.dropout(
-        inputs=dense, rate=hparams["dropout_rate"], training=istraining)
+        inputs=dense, rate=hparams["dropout_rate"], training=istraining, seed=12)
 
     # Output layer
     output  = tf.squeeze(tf.layers.dense(inputs=dropout, units=1, activation=tf.nn.sigmoid))
