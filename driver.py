@@ -108,6 +108,5 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    tf.set_random_seed(1234)
     tf.logging.set_verbosity(tf.logging.INFO)
     tf.app.run()
