@@ -29,6 +29,9 @@ def set_flags():
     return FLAGS
 
 
+def optimizer_fn(lr):
+    return tf.train.GradientDescentOptimizer(learning_rate=lr)
+
 def loss_fn(labels, nn_output):
     loss = tf.losses.mean_squared_error(labels=labels, predictions=nn_output)
     return loss
@@ -208,7 +211,7 @@ def model_fn(features, labels, mode, nn_graph = None):
         loss = loss_fn(labels, nn_output)
         tf.summary.scalar('Loss', loss)
 
-        optimizer = tf.train.AdamOptimizer(learning_rate=hparams["learning_rate"])
+        optimizer = optimizer_fn(hparams["learning_rate"])
         train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
         return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
 

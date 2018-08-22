@@ -14,6 +14,21 @@ import matplotlib.pylab as plt
 FLAGS = model.set_flags()
 
 
+def train_input_fn(features, labels, batch_size):
+    """An input function for training"""
+    buffer_size = 1000
+    random_seed = 123
+
+    # Convert the inputs to a Dataset.
+    dataset = tf.data.Dataset.from_tensor_slices((dict(features), labels))
+
+    # Shuffle, repeat, and batch the examples.
+    dataset = dataset.shuffle(buffer_size, seed=random_seed).repeat().batch(batch_size)
+
+    # Return the dataset.
+    return dataset
+
+
 def train(estimator_obj, train_data, train_labels, nsteps = FLAGS.training_steps, tensors_to_log = {}):
     """
     train the network as defined inside the estimator_obj with the given data
@@ -24,12 +39,13 @@ def train(estimator_obj, train_data, train_labels, nsteps = FLAGS.training_steps
     :return: None. The trained model is stored inside estimator_obj.model_dir
     """
     # define the training function
-    train_input_fn = tf.estimator.inputs.numpy_input_fn(
-        x={"x": train_data},
-        y=train_labels,
-        batch_size=FLAGS.batch,
-        num_epochs=None,
-        shuffle=True)
+    # input_fn = tf.estimator.inputs.numpy_input_fn(
+    #     x={"x": train_data},
+    #     y=train_labels,
+    #     batch_size=FLAGS.batch,
+    #     num_epochs=None,
+    #     shuffle=True)
+    input_fn = lambda: train_input_fn({"x": train_data}, train_labels, FLAGS.batch)
 
     # Set up logging for predictions
     # Log the values in a tensor with their labels using tensor_to_log dictionary
@@ -37,7 +53,7 @@ def train(estimator_obj, train_data, train_labels, nsteps = FLAGS.training_steps
 
     # Train the model
     estimator_obj.train(
-        input_fn=train_input_fn,
+        input_fn=input_fn,
         steps=nsteps,
         hooks=[logging_hook])
     return
@@ -70,7 +86,8 @@ def predict(estimator_obj, input_data, num_epochs = FLAGS.epoch):
 def main(argv):
 
     # Create the Estimator
-    osborn_nn_model = tf.estimator.Estimator(model_fn=model.cnn_model_fn, model_dir=FLAGS.model_dir)
+    config = tf.estimator.RunConfig(model_dir=FLAGS.model_dir, tf_random_seed=1234)
+    osborn_nn_model = tf.estimator.Estimator(model_fn=model.cnn_model_fn, config=config)
 
     # train the model
     if FLAGS.mode == 'train':
@@ -108,5 +125,6 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    np.random.rand(0)
     tf.logging.set_verbosity(tf.logging.INFO)
     tf.app.run()
