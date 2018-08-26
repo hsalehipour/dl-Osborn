@@ -17,7 +17,7 @@ FLAGS = model.set_flags()
 def train_input_fn(features, labels, batch_size):
     """An input function for training"""
     buffer_size = 1000
-    random_seed = 123
+    random_seed = 1234
 
     # Convert the inputs to a Dataset.
     dataset = tf.data.Dataset.from_tensor_slices((dict(features), labels))
@@ -93,8 +93,8 @@ def main(argv):
     if FLAGS.mode == 'train':
         # Load training and eval data in np.array
         # data_dir = FLAGS.train_data
-        (train_data, train_labels), (eval_data, eval_labels) = dataset.load_data(FLAGS.train_data, ratio=0.85)
-        (train_data2, train_labels2), (eval_data2, eval_labels2) = dataset.load_data(FLAGS.test_data, ratio=0.0)
+        (train_data, train_labels), (eval_data, eval_labels) = dataset.load_data(FLAGS.train_data, ratio=0.8)
+        (train_data2, train_labels2), (eval_data2, eval_labels2) = dataset.load_data(FLAGS.test_data, ratio=0.8)
         train_data   = np.append(train_data  , train_data2  , axis=0)
         train_labels = np.append(train_labels, train_labels2, axis=0)
         eval_data    = np.append(eval_data  , eval_data2    , axis=0)
@@ -104,7 +104,7 @@ def main(argv):
     # Evaluate the model and print results
     if FLAGS.mode == 'eval':
         data_dir = FLAGS.train_data
-        (train_data, train_labels), (eval_data, eval_labels) = dataset.load_data(data_dir, ratio=0.85)
+        (train_data, train_labels), (eval_data, eval_labels) = dataset.load_data(data_dir, ratio=0.8)
         eval_results = evaluate(osborn_nn_model, eval_data, eval_labels)
         print(eval_results)
 
@@ -125,6 +125,6 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    np.random.rand(0)
+    np.random.rand(1234)
     tf.logging.set_verbosity(tf.logging.INFO)
     tf.app.run()
