@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-headers_feature = ['z', 'eps', 'N2', 'eff', 'M']
+headers_feature = ['z', 'eps', 'N2', 'eff']
 nz_profile = 512
 nfeatures = 2
 
