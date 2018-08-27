@@ -13,7 +13,6 @@ def load_data(fdir, ratio=1.0):
     """
     data = pd.read_csv(fdir, names=headers_feature, skiprows=1)
     eff = data.pop('eff')[0:data.shape[0]:nz_profile]
-    MM  = data.pop('M')[0:data.shape[0]:nz_profile]
     zz = data.pop('z')
 
     # data must be reshaped

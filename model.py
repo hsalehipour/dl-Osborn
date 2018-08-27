@@ -19,8 +19,8 @@ def set_flags():
     # DEFAULT SETTINGS
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_dir' , type=str, default='./experiments/test/r1/', help='Directory that stores all training logs and trained models')
-    parser.add_argument('--train_data', type=str, default='./data/KHI_training_data.dat', help='Dataset for training')
-    parser.add_argument('--test_data' , type=str, default='./data/HWI_training_data.dat', help='Dataset for testing')
+    parser.add_argument('--train_data', type=str, default='./data/training_data.dat', help='Dataset for training')
+    parser.add_argument('--test_data' , type=str, default='./data/testing_data.dat', help='Dataset for testing')
     parser.add_argument('--mode', type=str, default='train', help='Network MODE: "train", "eval", "infer" (predict or serving).  [default: "train"]')
     parser.add_argument('--training_steps', type=int, default=2e4, help='Number of training steps [default: 20,000]')
     parser.add_argument('--batch', type=int, default=100, help='Batch Size per GPU during training [default: 100]')
@@ -30,7 +30,8 @@ def set_flags():
 
 
 def optimizer_fn(lr):
-    return tf.train.GradientDescentOptimizer(learning_rate=lr)
+    return tf.train.AdamOptimizer(learning_rate=lr, use_locking=True)
+
 
 def loss_fn(labels, nn_output):
     loss = tf.losses.mean_squared_error(labels=labels, predictions=nn_output)
@@ -54,96 +55,64 @@ def ConvNet(input, mode):
     # Convolutional Layer #1
     conv1 = tf.layers.conv2d(
         inputs=input_layer_batch_normalized,
-        filters=8,
-        kernel_size=[2, 4],
-        strides=(1, 1),
-        padding="same",
-        kernel_initializer=tf.contrib.layers.xavier_initializer(seed=1234),
-        activation=hparams["activation"])
-    conv1_dropout = tf.layers.dropout(inputs=conv1, rate=hparams["dropout_rate"], training=istraining, seed=12)
-
-    # Pooling Layer #1
-    pool1 = tf.layers.average_pooling2d(inputs=conv1_dropout, pool_size=[1, 2], strides=[1, 2])
-
-    # Convolutional Layer #2
-    conv2 = tf.layers.conv2d(
-        inputs=pool1,
         filters=16,
         kernel_size=[2, 4],
         strides=(1, 1),
         padding="same",
         kernel_initializer=tf.contrib.layers.xavier_initializer(seed=1234),
         activation=hparams["activation"])
-    conv2_dropout = tf.layers.dropout(inputs=conv2, rate=hparams["dropout_rate"], training=istraining, seed=12)
+
+    # Pooling Layer #1
+    pool1 = tf.layers.average_pooling2d(inputs=conv1, pool_size=[1, 2], strides=[1, 2])
+
+    # Convolutional Layer #2
+    conv2 = tf.layers.conv2d(
+        inputs=pool1,
+        filters=32,
+        kernel_size=[2, 4],
+        strides=(1, 1),
+        padding="same",
+        kernel_initializer=tf.contrib.layers.xavier_initializer(seed=1234),
+        activation=hparams["activation"])
 
     # Pooling Layer #2
-    pool2 = tf.layers.average_pooling2d(inputs=conv2_dropout, pool_size=[1, 2], strides=[1, 2])
+    pool2 = tf.layers.average_pooling2d(inputs=conv2, pool_size=[1, 2], strides=[1, 2])
 
     # Convolutional Layer #3
     conv3 = tf.layers.conv2d(
         inputs=pool2,
-        filters=32,
+        filters=48,
         kernel_size=[2, 4],
         strides=(1, 1),
         padding="same",
         kernel_initializer=tf.contrib.layers.xavier_initializer(seed=1234),
         activation=hparams["activation"])
-    conv3_dropout = tf.layers.dropout(inputs=conv3, rate=hparams["dropout_rate"], training=istraining, seed=12)
 
     # Pooling Layer #3
-    pool3 = tf.layers.average_pooling2d(inputs=conv3_dropout, pool_size=[1, 2], strides=[1, 2])
+    pool3 = tf.layers.average_pooling2d(inputs=conv3, pool_size=[1, 2], strides=[1, 2])
 
     # Convolutional Layer #4
     conv4 = tf.layers.conv2d(
         inputs=pool3,
-        filters=32,
-        kernel_size=[2, 4],
-        strides=(1, 1),
-        padding="same",
-        kernel_initializer=tf.contrib.layers.xavier_initializer(seed=1234),
-        activation=hparams["activation"])
-    conv4_dropout = tf.layers.dropout(inputs=conv4, rate=hparams["dropout_rate"], training=istraining, seed=12)
-
-    # Pooling Layer #4
-    pool4 = tf.layers.average_pooling2d(inputs=conv4_dropout, pool_size=[1, 2], strides=[1, 2])
-
-    # Convolutional Layer #5
-    conv5 = tf.layers.conv2d(
-        inputs=pool4,
         filters=64,
         kernel_size=[2, 4],
         strides=(1, 1),
         padding="same",
         kernel_initializer=tf.contrib.layers.xavier_initializer(seed=1234),
         activation=hparams["activation"])
-    conv5_dropout = tf.layers.dropout(inputs=conv5, rate=hparams["dropout_rate"], training=istraining, seed=12)
-
-    # Pooling Layer #5
-    pool5 = tf.layers.average_pooling2d(inputs=conv5_dropout, pool_size=[1, 2], strides=[1, 2])
-
-    # Convolutional Layer #6
-    conv6 = tf.layers.conv2d(
-        inputs=pool5,
-        filters=128,
-        kernel_size=[2, 4],
-        strides=(1, 1),
-        padding="same",
-        kernel_initializer=tf.contrib.layers.xavier_initializer(seed=1234),
-        activation=hparams["activation"])
-    conv6_dropout = tf.layers.dropout(inputs=conv6, rate=hparams["dropout_rate"], training=istraining, seed=12)
 
     # Pooling Layer #6
-    pool6 = tf.layers.average_pooling2d(inputs=conv6_dropout, pool_size=[1, 2], strides=[1, 2])
+    pool4 = tf.layers.average_pooling2d(inputs=conv4, pool_size=[1, 2], strides=[1, 2])
 
     # Flatten tensor into a batch of vectors
-    pool6_flat = tf.reshape(pool6, [-1, 2 * 128 * 8])
+    pool4_flat = tf.reshape(pool4, [-1, 2 * 64 * 32])
 
     # Dense Layer
-    dense = tf.layers.dense(inputs=pool6_flat, units=64, activation=hparams["activation"])
+    dense = tf.layers.dense(inputs=pool4_flat, units=64, activation=hparams["activation"])
 
     # Add dropout operation
     dropout = tf.layers.dropout(
-        inputs=dense, rate=hparams["dropout_rate"], training=istraining, seed=12)
+        inputs=dense, rate=hparams["dropout_rate"], training=istraining, seed=1234)
 
     # Output layer
     output  = tf.squeeze(tf.layers.dense(inputs=dropout, units=1, activation=tf.nn.sigmoid))
@@ -158,10 +127,10 @@ def FCNet(features, mode):
 
     # Input Layer
     # batch normalize input layer
-    input_layer_reshaped = tf.reshape(features["x"], [-1, 2, 512])
-    input_layer_batch_normalized = tf.layers.batch_normalization(input_layer_reshaped, axis=-1)
-    input_layer = tf.reshape(input_layer_batch_normalized, [-1, 2 * 512])
-    # input_layer = features["x"]
+    # input_layer_reshaped = tf.reshape(features["x"], [-1, 2, 512])
+    # input_layer_batch_normalized = tf.layers.batch_normalization(input_layer_reshaped, axis=-1)
+    # input_layer = tf.reshape(input_layer_batch_normalized, [-1, 2 * 512])
+    input_layer = tf.reshape(features["x"], [-1, 2 * 512])
 
     # Dense Layer #1
     dense1 = tf.layers.dense(inputs=input_layer, units=4096, activation=hparams["activation"])

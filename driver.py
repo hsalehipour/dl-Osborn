@@ -93,18 +93,13 @@ def main(argv):
     if FLAGS.mode == 'train':
         # Load training and eval data in np.array
         # data_dir = FLAGS.train_data
-        (train_data, train_labels), (eval_data, eval_labels) = dataset.load_data(FLAGS.train_data, ratio=0.8)
-        (train_data2, train_labels2), (eval_data2, eval_labels2) = dataset.load_data(FLAGS.test_data, ratio=0.8)
-        train_data   = np.append(train_data  , train_data2  , axis=0)
-        train_labels = np.append(train_labels, train_labels2, axis=0)
-        eval_data    = np.append(eval_data  , eval_data2    , axis=0)
-        eval_labels  = np.append(eval_labels, eval_labels2  , axis=0)
+        (train_data, train_labels) = dataset.load_data(FLAGS.train_data, ratio=1.0)
         train(osborn_nn_model, train_data, train_labels)
 
     # Evaluate the model and print results
     if FLAGS.mode == 'eval':
-        data_dir = FLAGS.train_data
-        (train_data, train_labels), (eval_data, eval_labels) = dataset.load_data(data_dir, ratio=0.8)
+        data_dir = FLAGS.test_data
+        (eval_data, eval_labels) = dataset.load_data(data_dir, ratio=1.0)
         eval_results = evaluate(osborn_nn_model, eval_data, eval_labels)
         print(eval_results)
 
