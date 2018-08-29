@@ -180,6 +180,10 @@ def model_fn(features, labels, mode, nn_graph = None):
         loss = loss_fn(labels, nn_output)
         tf.summary.scalar('Loss', loss)
 
+        # Output number of parameters
+        nvar_graph = tf.reduce_sum([tf.reduce_prod(v.shape) for v in tf.trainable_variables()])
+        tf.summary.scalar('Total_num_trainable_var', nvar_graph)
+
         optimizer = optimizer_fn(hparams["learning_rate"])
         train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
         return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
