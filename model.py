@@ -55,7 +55,7 @@ def ConvNet(input, mode):
     # Convolutional Layer #1
     conv1 = tf.layers.conv2d(
         inputs=input_layer_batch_normalized,
-        filters=16,
+        filters=64,
         kernel_size=[2, 4],
         strides=(1, 1),
         padding="same",
@@ -68,7 +68,7 @@ def ConvNet(input, mode):
     # Convolutional Layer #2
     conv2 = tf.layers.conv2d(
         inputs=pool1,
-        filters=32,
+        filters=64,
         kernel_size=[2, 4],
         strides=(1, 1),
         padding="same",
@@ -81,7 +81,7 @@ def ConvNet(input, mode):
     # Convolutional Layer #3
     conv3 = tf.layers.conv2d(
         inputs=pool2,
-        filters=48,
+        filters=64,
         kernel_size=[2, 4],
         strides=(1, 1),
         padding="same",
@@ -101,14 +101,53 @@ def ConvNet(input, mode):
         kernel_initializer=tf.contrib.layers.xavier_initializer(seed=1234),
         activation=hparams["activation"])
 
-    # Pooling Layer #6
+    # Pooling Layer #4
     pool4 = tf.layers.average_pooling2d(inputs=conv4, pool_size=[1, 2], strides=[1, 2])
 
+    # Convolutional Layer #5
+    conv5 = tf.layers.conv2d(
+        inputs=pool4,
+        filters=64,
+        kernel_size=[2, 4],
+        strides=(1, 1),
+        padding="same",
+        kernel_initializer=tf.contrib.layers.xavier_initializer(seed=1234),
+        activation=hparams["activation"])
+
+    # Pooling Layer #5
+    pool5 = tf.layers.average_pooling2d(inputs=conv5, pool_size=[1, 2], strides=[1, 2])
+
+    # Convolutional Layer #6
+    conv6 = tf.layers.conv2d(
+        inputs=pool5,
+        filters=64,
+        kernel_size=[2, 4],
+        strides=(1, 1),
+        padding="same",
+        kernel_initializer=tf.contrib.layers.xavier_initializer(seed=1234),
+        activation=hparams["activation"])
+
+    # Pooling Layer #6
+    pool6 = tf.layers.average_pooling2d(inputs=conv6, pool_size=[1, 2], strides=[1, 2])
+
+    # # Convolutional Layer #7
+    # conv7 = tf.layers.conv2d(
+    #     inputs=pool6,
+    #     filters=64,
+    #     kernel_size=[2, 4],
+    #     strides=(1, 1),
+    #     padding="same",
+    #     kernel_initializer=tf.contrib.layers.xavier_initializer(seed=1234),
+    #     activation=hparams["activation"])
+    #
+    # # Pooling Layer #7
+    # pool7 = tf.layers.average_pooling2d(inputs=conv7, pool_size=[1, 2], strides=[1, 2])
+
     # Flatten tensor into a batch of vectors
-    pool4_flat = tf.reshape(pool4, [-1, 2 * 64 * 32])
+    pool6_flat = tf.reshape(pool6, [-1, 2 * 64 * 8])
 
     # Dense Layer
-    dense = tf.layers.dense(inputs=pool4_flat, units=64, activation=hparams["activation"])
+    dense = tf.layers.dense(inputs=pool6_flat, units=64, activation=hparams["activation"])
 
     # Add dropout operation
     dropout = tf.layers.dropout(
