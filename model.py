@@ -172,20 +172,26 @@ def FCNet(features, mode):
     input_layer = tf.reshape(features["x"], [-1, 2 * 512])
 
     # Dense Layer #1
-    dense1 = tf.layers.dense(inputs=input_layer, units=4096, activation=hparams["activation"])
+    dense1 = tf.layers.dense(inputs=input_layer, units=128, activation=hparams["activation"])
 
     # Dense Layer #2
-    dense2 = tf.layers.dense(inputs=dense1, units=1024, activation=hparams["activation"])
+    dense2 = tf.layers.dense(inputs=dense1, units=128, activation=hparams["activation"])
 
     # Dense Layer #3
     dense3 = tf.layers.dense(inputs=dense2, units=128, activation=hparams["activation"])
 
     # Dense Layer #4
-    dense4 = tf.layers.dense(inputs=dense3, units=32, activation=hparams["activation"])
+    dense4 = tf.layers.dense(inputs=dense3, units=256, activation=hparams["activation"])
+
+    # Dense Layer #5
+    dense5 = tf.layers.dense(inputs=dense4, units=256, activation=hparams["activation"])
+
+    # Dense Layer #6
+    dense6 = tf.layers.dense(inputs=dense5, units=128, activation=hparams["activation"])
 
     # Add dropout operation
     dropout = tf.layers.dropout(
-        inputs=dense4, rate=hparams["dropout_rate"], training=mode == tf.estimator.ModeKeys.TRAIN)
+        inputs=dense6, rate=hparams["dropout_rate"], training=mode == tf.estimator.ModeKeys.TRAIN)
 
     # Output layer
     output = tf.squeeze(tf.layers.dense(inputs=dropout, units=1, activation=tf.nn.sigmoid))
