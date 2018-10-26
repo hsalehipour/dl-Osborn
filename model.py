@@ -5,6 +5,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 import argparse
+from dataset import save_data
 
 
 # hyper parameters
@@ -155,7 +156,7 @@ def ConvNet(input, mode):
 
     # Output layer
     output  = tf.squeeze(tf.layers.dense(inputs=dropout, units=1, activation=tf.nn.sigmoid))
-    return output
+    return output, conv1
 
 
 
@@ -214,10 +215,13 @@ def model_fn(features, labels, mode, nn_graph = None):
         tf.logging.info("model_fn: TRAIN, {}".format(mode))
 
     # Find network output
-    nn_output = nn_graph(features, mode)
+    nn_output, nn_layer1 = nn_graph(features, mode)
 
     # Generate predictions (for PREDICT and EVAL mode)
     predictions_dic = {"efficiency": nn_output}
+
+    # Set up a session hook for evaluating first layer outputs
+    fetches_hook = FetchHook(nn_layer1)
 
     # Configure the Training Op (for TRAIN mode)
     if mode == tf.estimator.ModeKeys.TRAIN:
@@ -241,7 +245,8 @@ def model_fn(features, labels, mode, nn_graph = None):
             "error_rmse": tf.metrics.root_mean_squared_error(
                 labels=labels, predictions=nn_output),
         }
-        return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+        return tf.estimator.EstimatorSpec(mode=mode, loss=loss,
+                                          eval_metric_ops=eval_metric_ops, evaluation_hooks=[fetches_hook])
     else:
         # mode == tf.estimator.ModeKeys.PREDICT:
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions_dic)
@@ -257,6 +262,32 @@ def dnn_model_fn(features, labels, mode):
     return model_fn(features, labels, mode, nn_graph=FCNet)
 
 
+class FetchHook(tf.train.SessionRunHook):
+
+    def __init__(self, fetches):
+        self.fetches = fetches
+        return
+
+    def begin(self):
+        # You can add ops to the graph here.
+        print('Starting the session.')
+
+    def after_create_session(self, session, coord):
+        # When this is called, the graph is finalized and
+        # ops can no longer be added to the graph.
+        print('Session created.')
+
+    def before_run(self, run_context):
+        print('Before calling session.run().')
+        return tf.train.SessionRunArgs(self.fetches)
+
+    def after_run(self, run_context, run_values):
+        # 'F' fortran ordering because (unfortunately at this point) I need to read this output file in MATLAB!
+        save_data({'conv_output': run_values.results.flatten('F')}, 'conv_output.dat')
+        pass
+
+    def end(self, session):
+      print('Done with the session.')
 
 
 
