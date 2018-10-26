@@ -59,13 +59,14 @@ def train(estimator_obj, train_data, train_labels, nsteps = FLAGS.training_steps
     return
 
 
-def evaluate(estimator_obj, data, labels, num_epochs=FLAGS.epoch):
+def evaluate(estimator_obj, data, labels, batch_size=FLAGS.batch, num_epochs=FLAGS.epoch):
     """
     Evaluates the model as defined inside estimator_obj
     """
     eval_input_fn = tf.estimator.inputs.numpy_input_fn(
         x={"x": data},
         y= labels,
+        batch_size=batch_size,
         num_epochs=num_epochs,
         shuffle=False)
     eval_results = estimator_obj.evaluate(input_fn=eval_input_fn)
